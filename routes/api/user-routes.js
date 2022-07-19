@@ -51,7 +51,7 @@ router.get('/:id', (req, res) => {
         });
 });
 
-// POST /api/users
+// POST /api/users; creates a new user
 router.post('/', (req, res) => {
     // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
     // To insert data, we use Sequelize's .create() method. Pass in key/value pairs where the keys
@@ -69,6 +69,44 @@ router.post('/', (req, res) => {
     });
 });
 
+// Searches for the instance of a user that contains the user's credentials. In this case, the user's
+// email. We query the User table using the findOne() method for the email entered by the user and
+// assigned it to req.body.email. If hte user with that email was not found, a message is sent back
+// as a response to the client. However, if the email was found in the database, the next step will
+// be to verify the user's identity by matching the password from the user and the hashed password
+// in the database. This will be done in the Promise of the query.
+router.post('/login', (req, res) => {
+    
+    // The .findOne() Sequelize method looks for a user with the specified email. The result of the
+    // query is passed as dbUserData to the .then() part of the .findOne() method. If the query was 
+    // successful (not empty), we can call .checkPassword(), which will be on the dbUserData object.
+    // We'll need to pass the plaintext password, which is stored in req.body.password, into
+    // .checkPassword() as the argument. The .compareSync() method, which is in .checkPassword(), can
+    // then confirm or deny that the supplied password matches the hashed password stored on the object.
+    // .checkPassword() will then return true on success or false on failure. That boolean value will
+    // then be stored to the variable validPassword.
+
+    // expects {email: 'lernantino@gmail.com', password: 'password1234'}
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    }).then(dbUserData => {
+        if (!dbUserData) {
+            res.status(400).json({ message: 'No user with that email address!' });
+            return;
+        }
+
+        // Verify user
+        const validPassword = dbUserData.checkPassword(req.body.password);
+        if (!validPassword) {
+            res.status(400).json({ message: 'Incorrect password!' });
+            return;
+        }
+        res.json({ user: dbUserData, message: 'You are now logged in!' });
+    });  
+});
+
 // PUT /api/users/1
 router.put('/:id', (req, res) => {
     // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
@@ -79,21 +117,22 @@ router.put('/:id', (req, res) => {
     // where exactly we want that new data to be used. If we were to put it in SQL syntax it would look
     // like this: UPDATE users SET username = "Lernantino", email = "lernantino@gmail.com", password = "newPassword1234" WHERE id = 1;
     User.update(req.body, {
-    where: {
-        id: req.params.id
-    }
-    })
-    .then(dbUserData => {
-        if (!dbUserData[0]) {
-            res.status(404).json({ message: 'No user found with this id' });
-            return;
+        individualHooks: true,
+        where: {
+            id: req.params.id
         }
-        res.json(dbUserData);
-    })
-        .catch(err => {
-        console.log(err);
-        res.status(500).json(err);
-    });
+        })
+        .then(dbUserData => {
+            if (!dbUserData[0]) {
+                res.status(404).json({ message: 'No user found with this id' });
+                return;
+            }
+            res.json(dbUserData);
+        })
+            .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
 });
 
 // DELETE /api/users/1
