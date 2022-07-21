@@ -1,5 +1,6 @@
 const router = require('express').Router();
-const { Post, User } = require('../../models');
+const { Post, User, Vote } = require('../../models');
+
 
 // get all users. Captures the response from the database call. This is the query to the
 // database with the Promise.
@@ -55,18 +56,32 @@ router.get('/:id', (req, res) => {
 // Creates a post. We are assigning the values of the title, post_url, and user_id to the properties in the req.body
 // object that was in the request from the user.
 router.post('/', (req, res) => {
-        // expects {title: 'Taskmaster goes public!', post_url: 'https://taskmaster.com/press', user_id: 1}
-        //
-        Post.create({
-            title: req.body.title,
-            post_url: req.body.post_url,
-            user_id: req.body.user_id
-        })
-        .then(dbPostData => res.json(dbPostData))
-        .catch(err => {
-            console.log(err);
-            res.status(500).json(err);
-        });
+    // expects {title: 'Taskmaster goes public!', post_url: 'https://taskmaster.com/press', user_id: 1}
+    //
+    Post.create({
+        title: req.body.title,
+        post_url: req.body.post_url,
+        user_id: req.body.user_id
+    })
+    .then(dbPostData => res.json(dbPostData))
+    .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+    });
+});
+
+// PUT /api/posts/upvote. Needs to be before the router.put route with /:id otherwise Express.js will
+// think the word "upvote" is a valid parameter for /:id. The upvote request involves two queries: first,
+// using the Vote model to create a vote, then querying on that post to get an updated vote count. To 
+// create a vote, we need to pass in both the user's id and the post's id with req.body. 
+router.put('/upvote', (req, res) => {
+    // To create a vote we need to pass in both the user's id and the post's id with req.body.
+    Vote.create({
+        user_id: req.body.user_id,
+        post_id: req.body.post_id
+    })
+    .then(dbPostData => res.json(dbPostData))
+    .catch(err => res.json(err));
 });
 
 // Update a post's Title. Because this updates an existing entry, the first thing is to retrieve the
