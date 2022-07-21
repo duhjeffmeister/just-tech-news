@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { Post, User, Vote } = require('../../models');
 
 
+
 // get all users. Captures the response from the database call. This is the query to the
 // database with the Promise.
 router.get('/', (req, res) => {
