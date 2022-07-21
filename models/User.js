@@ -15,7 +15,7 @@ class User extends Model {
     }
 }
 
-// Define table columns and configuration. Once we create the User class, we use the .init() method 
+// Define table columns and configuration. Once we create the User class, we use the .init() method
 // to initialize the model's data and configuration, passing in two objects as arguments. The first 
 // object will define the columns and data types for those columns. The second object it accepts
 // configures certain options for the table. User model is set up to have 4 columns.

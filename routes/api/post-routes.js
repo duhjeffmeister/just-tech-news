@@ -23,7 +23,11 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
+    // Retrieves one post in the database.
     Post.findOne({
+        // where sets the value of the id using req.params.id. We're requesting the same attributes
+        // including the username which requires a reference to the User model using the include
+        // property.
         where: {
             id: req.params.id
         },
@@ -47,9 +51,12 @@ router.get('/:id', (req, res) => {
         res.status(500).json(err);
     });
 });
-    
+
+// Creates a post. We are assigning the values of the title, post_url, and user_id to the properties in the req.body
+// object that was in the request from the user.
 router.post('/', (req, res) => {
         // expects {title: 'Taskmaster goes public!', post_url: 'https://taskmaster.com/press', user_id: 1}
+        //
         Post.create({
             title: req.body.title,
             post_url: req.body.post_url,
@@ -62,6 +69,8 @@ router.post('/', (req, res) => {
         });
 });
 
+// Update a post's Title. Because this updates an existing entry, the first thing is to retrieve the
+// post instance by id, then alter the value of the title on this instance of a post.
 router.put('/:id', (req, res) => {
     Post.update(
         {
