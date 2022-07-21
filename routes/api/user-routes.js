@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User } = require('../../models');
+const { User, Post } = require('../../models');
 
 // GET /api/users. When a GET request is made, we will select all users from the user table in
 // the user table in the database and send it back as JSON. The User model inherits functionality
@@ -12,16 +12,11 @@ router.get('/', (req, res) => {
     User.findAll({
         attributes: { exclude: ['password'] }
     })
-        .then(dbUserData => res.json(dbUserData))
-        .catch(err => {
-            console.log(err);
-            res.status(500).json(err);
-        })
     .then(dbUserData => res.json(dbUserData))
     .catch(err => {
         console.log(err);
         res.status(500).json(err);
-    });
+    })
 });
 
 // GET /api/users/1
@@ -36,19 +31,25 @@ router.get('/:id', (req, res) => {
         attributes: { exclude: ['password'] },
         where: {
             id: req.params.id
-        }
-        })
-        .then(dbUserData => {
-            if (!dbUserData) {
-                res.status(404).json({ message: 'No user found with this id' });
-                return;
+        },
+        include: [
+            {
+                model: Post,
+                attributes: ['id', 'title', 'post_url', 'created_at']
             }
-            res.json(dbUserData);
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).json(err);
-        });
+        ]
+    })
+    .then(dbUserData => {
+        if (!dbUserData) {
+            res.status(404).json({ message: 'No user found with this id' });
+            return;
+        }
+        res.json(dbUserData);
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+    });
 });
 
 // POST /api/users; creates a new user
@@ -99,6 +100,7 @@ router.post('/login', (req, res) => {
 
         // Verify user
         const validPassword = dbUserData.checkPassword(req.body.password);
+        
         if (!validPassword) {
             res.status(400).json({ message: 'Incorrect password!' });
             return;

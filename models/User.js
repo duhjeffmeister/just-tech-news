@@ -2,8 +2,8 @@
 // own models from  using the extends keyword so User inherits all of the functionality the Model class
 // has.
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/connection');
 const bcrypt = require('bcrypt');
+const sequelize = require('../config/connection');
 
 // Create our User model
 class User extends Model {
