@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User, Post } = require('../../models');
+const { User, Post, Vote } = require('../../models');
 
 // GET /api/users. When a GET request is made, we will select all users from the user table in
 // the user table in the database and send it back as JSON. The User model inherits functionality
@@ -32,10 +32,21 @@ router.get('/:id', (req, res) => {
         where: {
             id: req.params.id
         },
+
+        // Retrieves data regarding which posts a user has voted on. When we query users, we will
+        // get back a list of posts that a user has actively created and a list of posts that a user
+        // has voted on. 
         include: [
             {
                 model: Post,
                 attributes: ['id', 'title', 'post_url', 'created_at']
+            },
+            // Includes the vote data
+            {
+                model: Post,
+                attributes: ['title'],
+                through: Vote,
+                as: 'voted_posts'
             }
         ]
     })
