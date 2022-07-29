@@ -1,22 +1,25 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/connection');
 
-class Vote extends Model {}
+class Comment extends Model {}
 
-// We can track the posts that users vote on. When a user votes on a post, we'll insert a new row
-// of data to the table, which lists the primary key of the user and the primary keys of the post
-// they voted on. We have created a through table, which is a table created for the sole purpose
-// of connecting the data between two other tables with their primary keys.
-Vote.init(
+Comment.init(
   {
     id: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       primaryKey: true,
       autoIncrement: true
     },
+    comment_text: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: [1]
+      }
+    },
     user_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: 'user',
         key: 'id'
@@ -24,7 +27,6 @@ Vote.init(
     },
     post_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: 'post',
         key: 'id'
@@ -33,11 +35,10 @@ Vote.init(
   },
   {
     sequelize,
-    timestamps: false,
     freezeTableName: true,
     underscored: true,
-    modelName: 'vote'
+    modelName: 'comment'
   }
 );
 
-module.exports = Vote;
+module.exports = Comment;

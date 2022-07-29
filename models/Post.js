@@ -3,29 +3,38 @@ const sequelize = require('../config/connection');
 
 // create our Post model
 class Post extends Model {
-    static upvote(body, models) {
-        return models.Vote.create({
-            user_id: body.user_id,
-            post_id: body.post_id
-        })
-        .then(() => {
-            return Post.findOne({
-                where: {
-                    id: body.post_id
-                },
-                attributes: [
-                    'id',
-                    'post_url',
-                    'title',
-                    'created_at',
-                    [
-                    sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'),
-                    'vote_count'
-                    ]
-                ]
-            });
-        });
-    }
+  static upvote(body, models) {
+    return models.Vote.create({
+      user_id: body.user_id,
+      post_id: body.post_id
+    }).then(() => {
+      return Post.findOne({
+        where: {
+          id: body.post_id
+        },
+        attributes: [
+          'id',
+          'post_url',
+          'title',
+          'created_at',
+          [
+            sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'),
+            'vote_count'
+          ]
+        ],
+        include: [
+          {
+            model: models.Comment,
+            attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+            include: {
+              model: models.User,
+              attributes: ['username']
+            }
+          }
+        ]
+      });
+    });
+  }
 }
 
 // Create fields/columns for Post model. The first parameter of Post.init defines the Post
@@ -39,41 +48,40 @@ class Post extends Model {
 // the primary key. The user_id is conversely defined as the foreign key and will be the
 // matching link. 
 Post.init(
-    {
-        id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            primaryKey: true,
-            autoIncrement: true
-        },
-        title: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
-        post_url: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                isURL: true
-            }
-        },
-        user_id: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'user',
-                key: 'id'
-            }
-        }
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      autoIncrement: true
     },
-
-    // In the second parameter, we configure the metadata, including the naming conventions.
-    {
-        sequelize,
-        freezeTableName: true,
-        underscored: true,
-        modelName: 'post'
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    post_url: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isURL: true
+      }
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'user',
+        key: 'id'
+      }
     }
+  },
+
+  // In the second parameter, we configure the metadata, including the naming conventions.
+  {
+    sequelize,
+    freezeTableName: true,
+    underscored: true,
+    modelName: 'post'
+  }
 );
 
-// Exports the Post model to be accessible to other parts of the application.
 module.exports = Post;
